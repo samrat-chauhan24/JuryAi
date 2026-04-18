@@ -3,6 +3,9 @@ import { View } from 'react-native';
 import { useLegalStore, Jurisdiction } from '../store/useLegalStore';
 import { Dropdown } from './Dropdown';
 
+// ✅ THEME
+import { spacing } from '../theme';
+
 export const ScopeDropdown = () => {
   const { jurisdiction, setJurisdiction, setCountries } = useLegalStore();
 
@@ -12,7 +15,12 @@ export const ScopeDropdown = () => {
   };
 
   return (
-    <View style={{ paddingHorizontal: 10, marginBottom: 6 }}>
+    <View
+      style={{
+        paddingHorizontal: spacing.md,
+        marginBottom: spacing.sm,
+      }}
+    >
       <Dropdown
         options={['global', 'specific country', 'comparison']}
         selected={jurisdiction}

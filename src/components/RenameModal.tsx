@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
+// ✅ THEME
+import { colors, spacing, radius, typography } from '../theme';
+
 type Props = {
   visible: boolean;
   onClose: () => void;
@@ -37,13 +40,20 @@ export const RenameModal = ({
       >
         <View
           style={{
-            margin: 20,
-            padding: 20,
-            backgroundColor: '#fff',
-            borderRadius: 10,
+            margin: spacing.lg,
+            padding: spacing.lg,
+            backgroundColor: colors.surface,
+            borderRadius: radius.lg,
+            borderWidth: 1,
+            borderColor: colors.border,
           }}
         >
-          <Text style={{ fontSize: 18, marginBottom: 10 }}>
+          <Text
+            style={[
+              typography.subtitle,
+              { marginBottom: spacing.md },
+            ]}
+          >
             Rename Chat
           </Text>
 
@@ -51,24 +61,39 @@ export const RenameModal = ({
             value={text}
             onChangeText={setText}
             placeholder="Enter new name"
+            placeholderTextColor={colors.subtext}
             returnKeyType="done"
             onSubmitEditing={() => {
-                if (!text.trim()) return;
-                onSave(text);
-                onClose();
+              if (!text.trim()) return;
+              onSave(text);
+              onClose();
             }}
             style={{
-                borderWidth: 1,
-                borderColor: '#ccc',
-                borderRadius: 8,
-                padding: 10,
-                marginBottom: 15,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: radius.md,
+              padding: spacing.md,
+              marginBottom: spacing.lg,
+              color: colors.text,
+              backgroundColor: colors.bg,
             }}
-           />
+          />
 
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'flex-end',
+            }}
+          >
             <TouchableOpacity onPress={onClose}>
-              <Text style={{ marginRight: 15 }}>Cancel</Text>
+              <Text
+                style={{
+                  marginRight: spacing.lg,
+                  color: colors.subtext,
+                }}
+              >
+                Cancel
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -78,7 +103,12 @@ export const RenameModal = ({
                 onClose();
               }}
             >
-              <Text style={{ color: '#007AFF', fontWeight: 'bold' }}>
+              <Text
+                style={{
+                  color: colors.primary,
+                  fontWeight: 'bold',
+                }}
+              >
                 Save
               </Text>
             </TouchableOpacity>

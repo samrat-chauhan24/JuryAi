@@ -2,6 +2,9 @@ import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useLegalStore } from '../store/useLegalStore';
 
+// ✅ THEME
+import { colors, spacing, radius, typography } from '../theme';
+
 type Props = {
   data: {
     answer: string;
@@ -14,6 +17,7 @@ type Props = {
     };
     references: string[];
   };
+  mode?: string; // 👈 ADD THIS
 };
 
 const Badge = ({ label, color }: { label: string; color: string }) => (
@@ -22,8 +26,7 @@ const Badge = ({ label, color }: { label: string; color: string }) => (
   </View>
 );
 
-export const StructuredResponse = memo(({ data }: Props) => {
-  const mode = useLegalStore((state) => state.mode);
+export const StructuredResponse = memo(({ data, mode }: Props) => {
   const isAdvanced = mode === 'advanced';
 
   if (!data) return null;
@@ -53,10 +56,10 @@ export const StructuredResponse = memo(({ data }: Props) => {
         <Badge label={`${data.risk} Risk`} color={riskColor} />
       </View>
 
-      {/* Summary (always visible) */}
+      {/* Summary */}
       <Text style={styles.summary}>{data.summary}</Text>
 
-      {/* Advanced Content */}
+      {/* Advanced */}
       {isAdvanced && (
         <>
           {data.analysis?.explanation && (
@@ -100,21 +103,21 @@ export const StructuredResponse = memo(({ data }: Props) => {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 14,
-    borderRadius: 12,
-    backgroundColor: '#fff',
-    marginVertical: 10,
+    borderColor: colors.border,
+    padding: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    marginVertical: spacing.md,
   },
   badgeRow: {
     flexDirection: 'row',
-    marginBottom: 10,
+    marginBottom: spacing.md,
   },
   badge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 8,
+    borderRadius: radius.md,
+    marginRight: spacing.sm,
   },
   badgeText: {
     color: '#fff',
@@ -122,27 +125,29 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   section: {
-    marginTop: 10,
+    marginTop: spacing.md,
   },
   sectionTitle: {
-    fontWeight: '600',
-    marginBottom: 4,
-    color: '#111827',
+    ...typography.subtitle,
+    marginBottom: spacing.xs,
   },
   summary: {
-    color: '#374151',
-    marginBottom: 6,
+    ...typography.body,
+    color: colors.subtext,
+    marginBottom: spacing.xs,
   },
   explanation: {
-    color: '#374151',
-    marginTop: 6,
+    ...typography.body,
+    color: colors.subtext,
+    marginTop: spacing.xs,
   },
   bullet: {
-    color: '#374151',
+    ...typography.body,
+    color: colors.subtext,
     marginBottom: 2,
   },
   reference: {
-    color: '#6b7280',
+    color: colors.muted,
     fontSize: 13,
     marginBottom: 2,
   },

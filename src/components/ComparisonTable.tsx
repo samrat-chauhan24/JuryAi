@@ -1,6 +1,9 @@
 import React, { memo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useLegalStore } from '../store/useLegalStore';
+// ❌ removed useLegalStore
+
+// ✅ THEME
+import { colors, spacing, radius, typography } from '../theme';
 
 type Item = {
   country: string;
@@ -21,14 +24,14 @@ const Badge = ({ label, color }: { label: string; color: string }) => (
   </View>
 );
 
-export const ComparisonTable = memo(({ data }: { data: Item[] }) => {
-  const mode = useLegalStore((state) => state.mode);
-  const isAdvanced = mode === 'advanced';
+// ✅ added mode prop
+export const ComparisonTable = memo(({ data, mode }: { data: Item[]; mode?: string }) => {
+  const isAdvanced = (mode ?? 'basic') === 'advanced';
 
   if (!Array.isArray(data) || data.length === 0) return null;
 
   return (
-    <View style={{ marginVertical: 10 }}>
+    <View style={{ marginVertical: spacing.md }}>
       {data.map((item) => {
         const conditions = item.analysis?.conditions || [];
         const risks = item.analysis?.risks || [];
@@ -103,51 +106,53 @@ export const ComparisonTable = memo(({ data }: { data: Item[] }) => {
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    padding: 14,
-    marginBottom: 12,
-    borderRadius: 12,
-    backgroundColor: '#fff',
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
   },
   country: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 6,
+    ...typography.subtitle,
+    marginBottom: spacing.xs,
   },
   badgeRow: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   badge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 8,
+    borderRadius: radius.md,
+    marginRight: spacing.sm,
   },
   badgeText: {
     color: '#fff',
     fontSize: 12,
   },
   summary: {
-    color: '#374151',
-    marginBottom: 6,
+    ...typography.body,
+    color: colors.subtext,
+    marginBottom: spacing.xs,
   },
   explanation: {
-    color: '#374151',
-    marginTop: 6,
+    ...typography.body,
+    color: colors.subtext,
+    marginTop: spacing.xs,
   },
   section: {
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   sectionTitle: {
-    fontWeight: '600',
-    marginBottom: 4,
+    ...typography.subtitle,
+    marginBottom: spacing.xs,
   },
   bullet: {
-    color: '#374151',
+    ...typography.body,
+    color: colors.subtext,
   },
   reference: {
-    color: '#6b7280',
+    color: colors.muted,
     fontSize: 13,
   },
 });

@@ -15,12 +15,12 @@ export const MessageRenderer = memo(({ item }: Props) => {
 
   // COMPARISON RESPONSE
   if (Array.isArray(item.data)) {
-    return <ComparisonTable data={item.data} />;
+    return <ComparisonTable data={item.data} mode={item.mode} />;
   }
 
   // STRUCTURED RESPONSE
   if (item.data && typeof item.data === 'object') {
-    return <StructuredResponse data={item.data} />;
+    return <StructuredResponse data={item.data} mode={item.mode} />;
   }
 
   // FALLBACK

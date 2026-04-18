@@ -11,6 +11,11 @@ import { LegalControls } from './components/LegalControls';
 
 import { TouchableOpacity, Text } from 'react-native';
 
+// ✅ THEME
+import { colors, spacing, typography } from './theme';
+
+import { Image } from 'react-native';
+
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -25,18 +30,49 @@ export default function App() {
   }, []);
 
   if (!dbReady) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center' }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+  return (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: colors.bg, // or colors.bg
+      }}
+    >
+      <Image
+        source={require('../assets/logo3.png')}
+        style={{
+          width: 80,
+          height: 80,
+          borderRadius: 40, // 👈 makes it round
+          marginBottom: 20,
+          resizeMode: 'cover', // 👈 important
+        }}
+      />
+
+      {/* Optional subtle loader */}
+      <ActivityIndicator size="small" color="#888" />
+    </View>
+  );
+}
 
   return (
     <NavigationContainer>
-      <Stack.Navigator>
+      <Stack.Navigator
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: colors.bg,
+            elevation: 0,
+            shadowOpacity: 0,
+          },
+          headerTitleStyle: {
+            ...typography.subtitle,
+          },
+          headerTintColor: colors.text,
+        }}
+      >
 
-        {/* Home (entry only) */}
+        {/* Home */}
         <Stack.Screen
           name="Home"
           component={HomeScreen}
@@ -50,13 +86,14 @@ export default function App() {
           options={({ navigation }) => ({
             title: 'Chat',
 
-            // 👈 THIS replaces the back arrow
             headerLeft: () => (
               <TouchableOpacity
                 onPress={() => navigation.navigate('Chats')}
-                style={{ marginLeft: 15 }}
+                style={{ marginLeft: spacing.md }}
               >
-                <Text style={{ fontSize: 20 }}>☰</Text>
+                <Text style={{ fontSize: 20, color: colors.text }}>
+                  ☰
+                </Text>
               </TouchableOpacity>
             ),
 

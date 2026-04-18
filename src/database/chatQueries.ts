@@ -44,17 +44,37 @@ export const updateChatAfterMessage = (chatId: string, text: string) => {
   );
 };
 
-// ✅ Get messages of a chat
+// ✅ Get messages of a chat (🔥 FIX APPLIED HERE)
 export const getMessages = (chatId: string) => {
   const result = db.execute(
     `SELECT * FROM messages WHERE chatId=? ORDER BY createdAt ASC`,
     [chatId]
   );
 
-  return result.rows?._array || [];
+  const rows = result.rows?._array || [];
+
+  // 🔥 Parse structured responses back into objects
+  const parsed = rows.map((msg: any) => {
+    if (msg.sender === 'bot') {
+      try {
+        const parsedText = JSON.parse(msg.text);
+
+        return {
+          ...msg,
+          data: parsedText.data ?? parsedText, // 👈 backward compatible
+          mode: parsedText.mode ?? 'basic',    // 👈 KEY FIX
+        };
+      } catch {
+        return msg;
+      }
+    }
+    return msg;
+  });
+
+  return parsed;
 };
 
-// change the name to users frist message
+// change the name to users first message
 export const updateChatTitleIfFirstMessage = (
   chatId: string,
   text: string
@@ -63,19 +83,17 @@ export const updateChatTitleIfFirstMessage = (
     `UPDATE chats 
      SET title=? 
      WHERE id=? AND title='New Chat'`,
-    [text.slice(0, 30), chatId] // limit length
+    [text.slice(0, 30), chatId]
   );
 };
 
 // delete chats
 export const deleteChat = (chatId: string) => {
-  // delete messages first (important)
   db.execute(
     `DELETE FROM messages WHERE chatId=?`,
     [chatId]
   );
 
-  // then delete chat
   db.execute(
     `DELETE FROM chats WHERE id=?`,
     [chatId]

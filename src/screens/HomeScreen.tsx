@@ -11,10 +11,13 @@ import { LegalControls } from '../components/LegalControls';
 import { CountryDropdown } from '../components/CountryDropdown';
 import { ScopeDropdown } from '../components/ScopeDropdown';
 
-import { Platform } from 'react-native'
-import { KeyboardAvoidingView } from 'react-native'
+import { Platform } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// ✅ THEME
+import { colors, spacing, typography } from '../theme';
 
 export const HomeScreen = ({ navigation }: any) => {
   const [input, setInput] = useState('');
@@ -29,7 +32,6 @@ export const HomeScreen = ({ navigation }: any) => {
 
     createChat(chatId);
 
-    // 🔥 Replace Home → Chat (removes Home)
     navigation.replace('Chat', {
       chatId,
       initialMessage: input,
@@ -40,105 +42,138 @@ export const HomeScreen = ({ navigation }: any) => {
   }, [input, sending, navigation]);
 
   return (
-     <SafeAreaView style={{ flex: 1, backgroundColor: '#fff' }}>
-  <View style={{ flex: 1, backgroundColor: '#fff' }}>
-
-    {/* HEADER */}
-    <View
-      style={{
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 10,
-        paddingBottom: 6,
-        paddingRight: 0,
-      }}
-    >
-      <TouchableOpacity onPress={() => navigation.navigate('Chats')}>
-        <Text style={{ fontSize: 22 }}>☰</Text>
-      </TouchableOpacity>
-
-      <LegalControls />
-    </View>
-
-    {/* CENTER TEXT */}
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 30,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 22,
-          textAlign: 'center',
-          fontWeight: '500',
-          lineHeight: 30,
-        }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        “Ask about laws, rights, or regulations”
-      </Text>
-    </View>
+        <View style={{ flex: 1, backgroundColor: colors.bg }}>
+          
+          {/* HEADER */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingHorizontal: spacing.lg,
+              paddingTop: spacing.sm,
+              paddingBottom: spacing.sm,
+              paddingRight: 0,
+            }}
+          >
+            <TouchableOpacity onPress={() => navigation.navigate('Chats')}>
+              <Text style={{ fontSize: 22, color: colors.text }}>☰</Text>
+            </TouchableOpacity>
 
-    {/* FOOTER */}
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
+            <LegalControls />
+          </View>
 
-      {/* Scope + Country */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'center', // 👈 center both
-          alignItems: 'center',
-          gap: 10,
-          marginBottom: 10,
-        }}
-      >
-        <ScopeDropdown />
-        <CountryDropdown />
-      </View>
+          {/* CENTER TEXT */}
+          <View
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              paddingHorizontal: spacing.xl,
+            }}
+          >
+            <Text
+              style={[
+                typography.title,
+                {
+                  textAlign: 'center',
+                  lineHeight: 30,
+                },
+              ]}
+            >
+              “Ask about laws, rights, or regulations”
+            </Text>
+          </View>
 
-      {/* Input */}
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          paddingHorizontal: 12,
-          paddingBottom: 12,
-        }}
-      >
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="Ask JuryAI..."
-          style={{
-            flex: 1,
-            borderWidth: 1,
-            borderColor: '#ddd',
-            borderRadius: 25,
-            paddingHorizontal: 15,
-            paddingVertical: 10,
-          }}
-          returnKeyType="send"
-          onSubmitEditing={handleSend}
-        />
+          {/* FLOATING AREA */}
+          <View
+            style={{
+              position: 'absolute',
+              bottom: spacing.lg,
 
-        <TouchableOpacity
-          onPress={handleSend}
-          style={{ marginLeft: 10 }}
-        >
-          <Text style={{ color: '#007AFF', fontWeight: '600' }}>
-            Send
-          </Text>
-        </TouchableOpacity>
-      </View>
+              alignSelf: 'center',
+              width: '90%',
+            }}
+          >
+            {/* Dropdowns */}
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: spacing.sm,
+                marginBottom: spacing.xs,
+              }}
+            >
+              <ScopeDropdown />
+              <CountryDropdown />
+            </View>
 
-    </KeyboardAvoidingView>
+            {/* Input */}
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
 
-  </View></SafeAreaView>
-);
+                backgroundColor: colors.surface,
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: colors.border,
+
+                paddingHorizontal: spacing.sm,
+                paddingVertical: 4,
+
+                // subtle elevation
+                shadowColor: '#000',
+                shadowOpacity: 0.1,
+                shadowRadius: 10,
+                elevation: 5,
+              }}
+            >
+              <TextInput
+                value={input}
+                onChangeText={setInput}
+                placeholder="Ask LawGPT..."
+                placeholderTextColor={colors.subtext}
+                style={{
+                  flex: 1,
+                  color: colors.text,
+                  paddingHorizontal: spacing.sm,
+                  paddingVertical: 6,
+                  fontSize: 15,
+                }}
+                returnKeyType="send"
+                onSubmitEditing={handleSend}
+              />
+
+              <TouchableOpacity
+                onPress={handleSend}
+                style={{
+                  marginLeft: spacing.xs,
+                  paddingHorizontal: spacing.sm,
+                  paddingVertical: 4,
+                }}
+              >
+                <Text
+                  style={{
+                    color: colors.primary,
+                    fontWeight: '600',
+                    fontSize: 14,
+                  }}
+                >
+                  Send
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
 };

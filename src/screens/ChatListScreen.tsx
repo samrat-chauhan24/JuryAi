@@ -17,6 +17,9 @@ import {
 
 import { RenameModal } from '../components/RenameModal';
 
+// ✅ THEME
+import { colors, spacing, radius, typography } from '../theme';
+
 type Chat = {
   id: string;
   title: string;
@@ -25,10 +28,8 @@ type Chat = {
 export const ChatListScreen = ({ navigation }: any) => {
   const [chats, setChats] = useState<Chat[]>([]);
 
-  // 🔥 selection state
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // 🔥 rename modal
   const [renameVisible, setRenameVisible] = useState(false);
   const [currentTitle, setCurrentTitle] = useState('');
 
@@ -43,27 +44,25 @@ export const ChatListScreen = ({ navigation }: any) => {
     }, [loadChats])
   );
 
-  // 🗑 Delete
   const handleDelete = (chatId: string) => {
-  Alert.alert(
-    'Delete Chat?',
-    'This cannot be undone',
-    [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          deleteChat(chatId);
-          setSelectedId(null);
-          loadChats();
+    Alert.alert(
+      'Delete Chat?',
+      'This cannot be undone',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            deleteChat(chatId);
+            setSelectedId(null);
+            loadChats();
+          },
         },
-      },
-    ]
-  );
-};
+      ]
+    );
+  };
 
-  // ✏️ Rename
   const handleRename = (chatId: string, title: string) => {
     setCurrentTitle(title);
     setSelectedId(chatId);
@@ -86,40 +85,53 @@ export const ChatListScreen = ({ navigation }: any) => {
       <Pressable
         onPress={() => {
           if (isSelected) {
-            setSelectedId(null); // 👈 deselect
+            setSelectedId(null);
           } else {
             navigation.navigate('Chat', { chatId: item.id });
           }
         }}
         onLongPress={() => setSelectedId(item.id)}
         style={{
-          paddingVertical: 14,
-          backgroundColor: isSelected ? '#f2f2f2' : '#fff',
+          paddingVertical: spacing.md,
+          paddingHorizontal: spacing.sm,
+          backgroundColor: isSelected ? colors.surfaceLight : colors.bg,
+          borderRadius: radius.md,
+          marginBottom: spacing.sm,
         }}
       >
-        <Text numberOfLines={1} style={{ fontSize: 16 }}>
+        <Text
+          numberOfLines={1}
+          style={[
+            typography.body,
+            { fontSize: 16 },
+          ]}
+        >
           {item.title || 'New Chat'}
         </Text>
 
-        {/* 🔥 Inline Actions */}
+        {/* Inline Actions */}
         {isSelected && (
           <View
             style={{
               flexDirection: 'row',
-              marginTop: 8,
-              gap: 20,
+              marginTop: spacing.sm,
+              gap: spacing.lg,
             }}
           >
             <TouchableOpacity
               onPress={() => handleRename(item.id, item.title)}
             >
-              <Text style={{ color: '#007AFF' }}>Rename</Text>
+              <Text style={{ color: colors.primary }}>
+                Rename
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => handleDelete(item.id)}
             >
-              <Text style={{ color: 'red' }}>Delete</Text>
+              <Text style={{ color: colors.error }}>
+                Delete
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -131,18 +143,19 @@ export const ChatListScreen = ({ navigation }: any) => {
     <Pressable
       style={{
         flex: 1,
-        backgroundColor: '#fff',
-        paddingHorizontal: 16,
-        paddingTop: 20,
+        backgroundColor: colors.bg,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.lg,
       }}
-      onPress={() => setSelectedId(null)} // 👈 tap outside clears selection
+      onPress={() => setSelectedId(null)}
     >
       <Text
-        style={{
-          fontSize: 20,
-          fontWeight: '600',
-          marginBottom: 10,
-        }}
+        style={[
+          typography.title,
+          {
+            marginBottom: spacing.md,
+          },
+        ]}
       >
         Recent Chats
       </Text>
@@ -159,15 +172,20 @@ export const ChatListScreen = ({ navigation }: any) => {
         onPress={() => navigation.navigate('Home')}
         style={{
           position: 'absolute',
-          bottom: 30,
-          right: 20,
-          backgroundColor: '#000',
-          paddingVertical: 12,
-          paddingHorizontal: 18,
-          borderRadius: 30,
+          bottom: spacing.xl,
+          right: spacing.lg,
+          backgroundColor: colors.primary,
+          paddingVertical: spacing.sm,
+          paddingHorizontal: spacing.lg,
+          borderRadius: radius.pill,
         }}
       >
-        <Text style={{ color: '#fff', fontWeight: '600' }}>
+        <Text
+          style={{
+            color: '#fff',
+            fontWeight: '600',
+          }}
+        >
           + Chat
         </Text>
       </TouchableOpacity>

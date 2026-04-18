@@ -6,39 +6,47 @@ import {
   Pressable,
 } from 'react-native';
 
+// ✅ THEME
+import { colors, spacing, radius, typography } from '../theme';
+
 export const Dropdown = ({
   label,
   options,
   selected,
   onSelect,
-  openDown = false, // 👈 ONLY new prop
+  openDown = false,
 }: any) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <View style={{ marginRight: 10 }}>
+    <View style={{ marginRight: spacing.sm }}>
       
       {/* Button */}
       <TouchableOpacity
         onPress={() => setOpen(!open)}
         style={{
-          paddingHorizontal: 5,
-          paddingVertical: 5,
+          paddingHorizontal: spacing.sm,
+          paddingVertical: spacing.xs,
           borderWidth: 1,
-          borderColor: '#ccc',
-          borderRadius: 15,
-          backgroundColor: '#fff',
-          alignItems: 'center',     // 👈 horizontal center
-          justifyContent: 'center', // 👈 vertical center
+          borderColor: colors.border,
+          borderRadius: radius.pill,
+          backgroundColor: colors.surface,
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        <Text>
+        <Text
+          style={[
+            typography.body,
+            { color: colors.text },
+          ]}
+        >
           {label && label.trim() !== '' ? `${label}: ` : ''}
           {selected || 'Select'} {openDown ? '▼' : '▲'}
         </Text>
       </TouchableOpacity>
 
-      {/* Overlay to close dropdown */}
+      {/* Overlay */}
       {open && (
         <Pressable
           onPress={() => setOpen(false)}
@@ -59,16 +67,15 @@ export const Dropdown = ({
           style={{
             position: 'absolute',
 
-            // 🔥 FIX: shift ONLY for openDown (mode)
             ...(openDown
-              ? { right: 0 }   // 👈 Mode dropdown aligns right
-              : { left: 0 }), // 👈 Others stay same
+              ? { right: 0 }
+              : { left: 0 }),
 
             minWidth: 120,
             borderWidth: 1,
-            borderColor: '#ddd',
-            borderRadius: 10,
-            backgroundColor: '#fff',
+            borderColor: colors.border,
+            borderRadius: radius.md,
+            backgroundColor: colors.surface,
             zIndex: 1000,
             elevation: 6,
             shadowColor: '#000',
@@ -76,8 +83,8 @@ export const Dropdown = ({
             shadowRadius: 5,
 
             ...(openDown
-              ? { top: 45 }       // Mode → DOWN
-              : { bottom: 45 }),  // Others → UP
+              ? { top: 45 }
+              : { bottom: 45 }),
           }}
         >
           {options.map((opt: string) => (
@@ -88,12 +95,14 @@ export const Dropdown = ({
                 setOpen(false);
               }}
               style={{
-                padding: 10,
+                padding: spacing.md,
                 borderBottomWidth: 0.5,
-                borderColor: '#eee',
+                borderColor: colors.divider,
               }}
             >
-              <Text>{opt}</Text>
+              <Text style={{ color: colors.text }}>
+                {opt}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>

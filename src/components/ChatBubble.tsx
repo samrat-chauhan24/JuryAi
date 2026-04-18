@@ -2,6 +2,9 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { parseMessage } from '../utils/parser';
 
+// ✅ THEME
+import { colors, spacing, radius, typography } from '../theme';
+
 type Props = {
   text: string;
   isUser: boolean;
@@ -14,20 +17,23 @@ export const ChatBubble = ({ text, isUser }: Props) => {
     <View
       style={{
         alignSelf: isUser ? 'flex-end' : 'flex-start',
-        backgroundColor: isUser ? '#007AFF' : '#E5E5EA',
-        padding: 12,
-        borderRadius: 12,
-        marginVertical: 4,
+        backgroundColor: isUser ? colors.primary : colors.surfaceLight,
+        padding: spacing.md,
+        borderRadius: radius.lg,
+        marginVertical: spacing.xs,
         maxWidth: '80%',
       }}
     >
       {parsed.map(line => (
         <Text
           key={line.key}
-          style={{
-            color: isUser ? '#fff' : '#000',
-            marginBottom: 4,
-          }}
+          style={[
+            typography.body,
+            {
+              color: isUser ? '#fff' : colors.text,
+              marginBottom: spacing.xs,
+            },
+          ]}
         >
           {line.isList ? '\n' : ''}
 
@@ -36,7 +42,7 @@ export const ChatBubble = ({ text, isUser }: Props) => {
               key={seg.key}
               style={{
                 fontWeight: seg.isBold ? 'bold' : 'normal',
-                color: isUser ? '#fff' : '#000',
+                color: isUser ? '#fff' : colors.text,
               }}
             >
               {seg.text}
