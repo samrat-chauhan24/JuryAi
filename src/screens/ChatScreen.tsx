@@ -31,6 +31,8 @@ import { ScopeDropdown } from '../components/ScopeDropdown';
 // ✅ THEME
 import { colors, spacing } from '../theme';
 
+import LinearGradient from 'react-native-linear-gradient';
+
 export const ChatScreen = () => {
   const route = useRoute<any>();
 
@@ -44,12 +46,15 @@ export const ChatScreen = () => {
 
   const flatListRef = useRef<FlatList>(null);
 
-  const {
-    jurisdiction,
-    countries,
-    mode,
-    isValid,
-  } = useLegalStore();
+  const jurisdiction = useLegalStore((s) => s.jurisdiction);
+  const countries = useLegalStore((s) => s.countries);
+  const mode = useLegalStore((s) => s.mode);
+  const isValid = useLegalStore((s) => s.isValid);
+
+  const isDisabled =
+  !input.trim() ||
+  !isValid() ||
+  sending;
 
   const loadMessages = useCallback(() => {
     if (!chatId) return;
@@ -165,6 +170,20 @@ export const ChatScreen = () => {
         />
       )}
 
+      {/* FADE OVERLAY
+      <LinearGradient
+        colors={['transparent', colors.bg]}
+        style={{
+          position: 'absolute',
+          bottom: spacing.lg + 60, // 👈 KEY: just above floating area
+          left: 0,
+          right: 0,
+          height: 60,
+          zIndex: 5,
+        }}
+        pointerEvents="none"
+      /> */}
+
       {/* FLOATING AREA */}
       <View
         style={{
@@ -223,23 +242,23 @@ export const ChatScreen = () => {
             }}
             returnKeyType="send"
             onSubmitEditing={() => {
-              if (!(!isValid() || sending)) handleSend(input);
+              if (!isDisabled) handleSend(input);
             }}
           />
 
           <TouchableOpacity
             onPress={() => handleSend(input)}
-            disabled={!isValid() || sending}
+            disabled={isDisabled}
             style={{
               marginLeft: spacing.xs,
               paddingHorizontal: spacing.sm,
               paddingVertical: 4,
-              opacity: !isValid() || sending ? 0.4 : 1,
+              opacity: isDisabled ? 0.4 : 1,
             }}
           >
             <Text
               style={{
-                color: colors.primary,
+                color: isDisabled ? colors.subtext : colors.primary,
                 fontWeight: '600',
                 fontSize: 14,
               }}

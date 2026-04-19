@@ -19,12 +19,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 // ✅ THEME
 import { colors, spacing, typography } from '../theme';
 
+// ✅ FIX: selector-based Zustand usage
+import { useLegalStore } from '../store/useLegalStore';
+
 export const HomeScreen = ({ navigation }: any) => {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
 
+  // ✅ SAFE STORE ACCESS (same pattern as ChatScreen)
+  const jurisdiction = useLegalStore((s) => s.jurisdiction);
+  const countries = useLegalStore((s) => s.countries);
+
+  // ✅ SAME VALIDATION LOGIC AS CHATSCREEN
+  const isDisabled =
+    sending ||
+    !input.trim() ||
+    (jurisdiction === 'specific country' && countries.length !== 1) ||
+    (jurisdiction === 'comparison' && countries.length !== 2);
+
   const handleSend = useCallback(() => {
-    if (!input.trim() || sending) return;
+    if (isDisabled) return;
 
     setSending(true);
 
@@ -39,7 +53,7 @@ export const HomeScreen = ({ navigation }: any) => {
 
     setInput('');
     setSending(false);
-  }, [input, sending, navigation]);
+  }, [isDisabled, input, navigation]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -95,7 +109,6 @@ export const HomeScreen = ({ navigation }: any) => {
             style={{
               position: 'absolute',
               bottom: spacing.lg,
-
               alignSelf: 'center',
               width: '90%',
             }}
@@ -114,21 +127,17 @@ export const HomeScreen = ({ navigation }: any) => {
               <CountryDropdown />
             </View>
 
-            {/* Input */}
+            {/* INPUT */}
             <View
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-
                 backgroundColor: colors.surface,
                 borderRadius: 999,
                 borderWidth: 1,
                 borderColor: colors.border,
-
                 paddingHorizontal: spacing.sm,
                 paddingVertical: 4,
-
-                // subtle elevation
                 shadowColor: '#000',
                 shadowOpacity: 0.1,
                 shadowRadius: 10,
@@ -148,20 +157,24 @@ export const HomeScreen = ({ navigation }: any) => {
                   fontSize: 15,
                 }}
                 returnKeyType="send"
-                onSubmitEditing={handleSend}
+                onSubmitEditing={() => {
+                  if (!isDisabled) handleSend();
+                }}
               />
 
               <TouchableOpacity
                 onPress={handleSend}
+                disabled={isDisabled}
                 style={{
                   marginLeft: spacing.xs,
                   paddingHorizontal: spacing.sm,
                   paddingVertical: 4,
+                  opacity: isDisabled ? 0.4 : 1,
                 }}
               >
                 <Text
                   style={{
-                    color: colors.primary,
+                    color: isDisabled ? colors.subtext : colors.primary,
                     fontWeight: '600',
                     fontSize: 14,
                   }}
