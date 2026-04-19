@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { ActivityIndicator, View } from 'react-native';
 
+import { IntroScreen } from './screens/IntroScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { ChatScreen } from './screens/ChatScreen';
 import { ChatListScreen } from './screens/ChatListScreen';
@@ -40,7 +41,7 @@ export default function App() {
       }}
     >
       <Image
-        source={require('../assets/logo3.png')}
+        source={require('./assets/logo3.png')}
         style={{
           width: 80,
           height: 80,
@@ -58,7 +59,7 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator
+      <Stack.Navigator initialRouteName="Intro"
         screenOptions={{
           headerStyle: {
             backgroundColor: colors.bg,
@@ -71,6 +72,12 @@ export default function App() {
           headerTintColor: colors.text,
         }}
       >
+
+        <Stack.Screen
+          name="Intro"
+          component={IntroScreen}
+          options={{ headerShown: false }}
+        />
 
         {/* Home */}
         <Stack.Screen
