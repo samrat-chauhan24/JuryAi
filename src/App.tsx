@@ -1,21 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, View, TouchableOpacity, Text, Image } from 'react-native';
 
 import { IntroScreen } from './screens/IntroScreen';
+import { SignInScreen } from './screens/SignInScreen';
+import { SignUpScreen } from './screens/SignUpScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { ChatScreen } from './screens/ChatScreen';
 import { ChatListScreen } from './screens/ChatListScreen';
+
 import { initDB } from './database/db';
 import { LegalControls } from './components/LegalControls';
 
-import { TouchableOpacity, Text } from 'react-native';
-
 // ✅ THEME
 import { colors, spacing, typography } from './theme';
-
-import { Image } from 'react-native';
 
 const Stack = createStackNavigator();
 
@@ -30,36 +29,37 @@ export default function App() {
     setup();
   }, []);
 
+  // ✅ LOADING SCREEN
   if (!dbReady) {
-  return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: colors.bg, // or colors.bg
-      }}
-    >
-      <Image
-        source={require('./assets/logo3.png')}
+    return (
+      <View
         style={{
-          width: 80,
-          height: 80,
-          borderRadius: 40, // 👈 makes it round
-          marginBottom: 20,
-          resizeMode: 'cover', // 👈 important
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.bg,
         }}
-      />
+      >
+        <Image
+          source={require('./assets/logo3.png')}
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: 40,
+            marginBottom: 20,
+            resizeMode: 'cover',
+          }}
+        />
 
-      {/* Optional subtle loader */}
-      <ActivityIndicator size="small" color="#888" />
-    </View>
-  );
-}
+        <ActivityIndicator size="small" color={colors.subtext} />
+      </View>
+    );
+  }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Intro"
+      <Stack.Navigator
+        initialRouteName="Intro"
         screenOptions={{
           headerStyle: {
             backgroundColor: colors.bg,
@@ -73,20 +73,34 @@ export default function App() {
         }}
       >
 
+        {/* INTRO */}
         <Stack.Screen
           name="Intro"
           component={IntroScreen}
           options={{ headerShown: false }}
         />
 
-        {/* Home */}
+        {/* AUTH */}
+        <Stack.Screen
+          name="SignIn"
+          component={SignInScreen}
+          options={{ headerShown: false }}
+        />
+
+        <Stack.Screen
+          name="SignUp"
+          component={SignUpScreen}
+          options={{ headerShown: false }}
+        />
+
+        {/* HOME */}
         <Stack.Screen
           name="Home"
           component={HomeScreen}
           options={{ headerShown: false }}
         />
 
-        {/* Chat */}
+        {/* CHAT */}
         <Stack.Screen
           name="Chat"
           component={ChatScreen}
@@ -108,7 +122,7 @@ export default function App() {
           })}
         />
 
-        {/* Chat List */}
+        {/* CHAT LIST */}
         <Stack.Screen
           name="Chats"
           component={ChatListScreen}
