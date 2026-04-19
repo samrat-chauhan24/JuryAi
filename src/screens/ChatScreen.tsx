@@ -33,6 +33,8 @@ import { colors, spacing } from '../theme';
 
 import LinearGradient from 'react-native-linear-gradient';
 
+import { Keyboard } from 'react-native';
+
 export const ChatScreen = () => {
   const route = useRoute<any>();
 
@@ -43,6 +45,8 @@ export const ChatScreen = () => {
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const [hasSentInitial, setHasSentInitial] = useState(false);
+
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
 
   const flatListRef = useRef<FlatList>(null);
 
@@ -73,6 +77,21 @@ export const ChatScreen = () => {
       flatListRef.current?.scrollToEnd({ animated: true });
     }, 100);
   }, [messages]);
+
+  useEffect(() => {
+  const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
+    setKeyboardHeight(e.endCoordinates.height);
+  });
+
+  const hideSub = Keyboard.addListener('keyboardDidHide', () => {
+    setKeyboardHeight(0);
+  });
+
+  return () => {
+    showSub.remove();
+    hideSub.remove();
+  };
+}, []);
 
   const handleSend = async (textOverride?: string) => {
     const text = textOverride ?? input;
@@ -188,7 +207,7 @@ export const ChatScreen = () => {
       <View
         style={{
           position: 'absolute',
-          bottom: spacing.lg,
+          bottom: keyboardHeight > 0 ? keyboardHeight -275  : spacing.lg,
 
           alignSelf: 'center',
           width: '90%',
