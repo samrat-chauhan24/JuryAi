@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,19 +11,35 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ✅ THEME
 import { colors, spacing, typography } from '../theme';
+import { signUp } from '../services/authService';
+
+import { Alert } from 'react-native';
 
 export const SignUpScreen = ({ navigation }: any) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const isDisabled =
+    loading ||
+    !email ||
+    !password ||
+    !confirmPassword ||
+    password !== confirmPassword;
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
 
-        {/* ✅ CENTERED TITLE */}
         <Text style={styles.title}>Sign Up</Text>
 
         <TextInput
           style={styles.input}
           placeholder="Email"
           placeholderTextColor={colors.subtext}
+          value={email}
+          onChangeText={setEmail}
         />
 
         <TextInput
@@ -31,6 +47,8 @@ export const SignUpScreen = ({ navigation }: any) => {
           placeholder="Password"
           placeholderTextColor={colors.subtext}
           secureTextEntry
+          value={password}
+          onChangeText={setPassword}
         />
 
         <TextInput
@@ -38,20 +56,49 @@ export const SignUpScreen = ({ navigation }: any) => {
           placeholder="Confirm Password"
           placeholderTextColor={colors.subtext}
           secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
         />
 
-        {/* ✅ HALF WIDTH BUTTON CENTERED */}
+        {/* BUTTON */}
         <View style={styles.buttonWrapper}>
           <TouchableOpacity
-            onPress={() => navigation.replace('Home')}
-            style={styles.button}
+            disabled={isDisabled}
+            onPress={async () => {
+              if (isDisabled) return;
+
+              try {
+                setLoading(true);
+                await signUp(email, password);
+                navigation.replace('Home');
+              } catch (e: any) {
+                  if (e.code === 'auth/email-already-in-use') {
+                    Alert.alert('Error', 'Email already registered');
+                  } else if (e.code === 'auth/invalid-email') {
+                    Alert.alert('Error', 'Invalid email');
+                  } else if (e.code === 'auth/weak-password') {
+                    Alert.alert('Error', 'Password must be at least 6 characters');
+                  } else {
+                    Alert.alert('Error', 'Something went wrong');
+                  }
+                } 
+              finally {
+                setLoading(false);
+              }
+            }}
+            style={[
+              styles.button,
+              { opacity: isDisabled ? 0.4 : 1 },
+            ]}
           >
-            <Text style={styles.placeholder}>Create Account</Text>
+            <Text style={styles.placeholder}>
+              {loading ? 'Creating...' : 'Create Account'}
+            </Text>
             <Text style={styles.arrow}>→</Text>
           </TouchableOpacity>
         </View>
 
-        {/* ✅ CENTERED LINK WITH HIGHLIGHT */}
+        {/* LINK */}
         <View style={styles.linkRow}>
           <Text style={styles.linkText}>
             Already have an account?{' '}
@@ -66,7 +113,7 @@ export const SignUpScreen = ({ navigation }: any) => {
   );
 };
 
-// ✅ STYLES
+// STYLES (unchanged)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -77,14 +124,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: spacing.lg,
   },
-
-  // ✅ centered title
   title: {
     ...typography.title,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
-
   input: {
     backgroundColor: colors.surface,
     borderRadius: 999,
@@ -95,52 +139,38 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     color: colors.text,
   },
-
-  // ✅ wrapper for centering half button
   buttonWrapper: {
     alignItems: 'center',
     marginTop: spacing.lg,
   },
-
-  // ✅ half width button
   button: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-
-    width: '60%', // 👈 half size pill
-
+    width: '60%',
     backgroundColor: colors.surface,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
-
     paddingHorizontal: spacing.md,
     paddingVertical: 12,
   },
-
   placeholder: {
     color: colors.subtext,
   },
-
   arrow: {
     color: colors.primary,
     fontSize: 18,
     fontWeight: '600',
   },
-
-  // ✅ centered link row
   linkRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: spacing.md,
   },
-
   linkText: {
     color: colors.subtext,
   },
-
-  // ✅ highlighted clickable text
   linkHighlight: {
     color: colors.primary,
     fontWeight: '600',

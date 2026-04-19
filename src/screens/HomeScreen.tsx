@@ -59,7 +59,7 @@ export const HomeScreen = ({ navigation }: any) => {
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={{ flex: 1, backgroundColor: colors.bg }}>
           
@@ -108,7 +108,10 @@ export const HomeScreen = ({ navigation }: any) => {
           <View
             style={{
               position: 'absolute',
-              bottom: spacing.lg,
+              bottom:
+                Platform.OS === 'ios'
+                  ? 0
+                  : spacing.lg,
               alignSelf: 'center',
               width: '90%',
             }}

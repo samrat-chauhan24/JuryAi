@@ -7,14 +7,24 @@ import {
   StyleSheet,
 } from 'react-native';
 
+import { useEffect, useState } from 'react';
+import auth from '@react-native-firebase/auth';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // ✅ THEME
 import { colors, spacing, typography } from '../theme';
 
 export const IntroScreen = ({ navigation }: any) => {
-  // ✅ HARD CODED FOR TESTING
-  const isLoggedIn = false;
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged((user) => {
+      setIsLoggedIn(!!user);
+    });
+
+    return unsubscribe;
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>

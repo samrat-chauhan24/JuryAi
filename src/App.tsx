@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { ActivityIndicator, View, TouchableOpacity, Text, Image } from 'react-native';
+import {
+  ActivityIndicator,
+  View,
+  TouchableOpacity,
+  Text,
+  Image,
+} from 'react-native';
+
+import auth from '@react-native-firebase/auth';
 
 import { IntroScreen } from './screens/IntroScreen';
 import { SignInScreen } from './screens/SignInScreen';
@@ -13,14 +21,18 @@ import { ChatListScreen } from './screens/ChatListScreen';
 import { initDB } from './database/db';
 import { LegalControls } from './components/LegalControls';
 
-// ✅ THEME
+// THEME
 import { colors, spacing, typography } from './theme';
 
 const Stack = createStackNavigator();
 
 export default function App() {
+  // ✅ ALL HOOKS FIRST (IMPORTANT)
   const [dbReady, setDbReady] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [checkingAuth, setCheckingAuth] = useState(true);
 
+  // DB INIT
   useEffect(() => {
     const setup = async () => {
       await initDB();
@@ -29,8 +41,18 @@ export default function App() {
     setup();
   }, []);
 
-  // ✅ LOADING SCREEN
-  if (!dbReady) {
+  // AUTH LISTENER
+  useEffect(() => {
+    const unsubscribe = auth().onAuthStateChanged((u) => {
+      setUser(u);
+      setCheckingAuth(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  // ✅ NOW SAFE TO RETURN CONDITIONALLY
+  if (!dbReady || checkingAuth) {
     return (
       <View
         style={{
@@ -47,10 +69,8 @@ export default function App() {
             height: 80,
             borderRadius: 40,
             marginBottom: 20,
-            resizeMode: 'cover',
           }}
         />
-
         <ActivityIndicator size="small" color={colors.subtext} />
       </View>
     );
@@ -59,7 +79,6 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator
-        initialRouteName="Intro"
         screenOptions={{
           headerStyle: {
             backgroundColor: colors.bg,
@@ -72,66 +91,63 @@ export default function App() {
           headerTintColor: colors.text,
         }}
       >
+        {user ? (
+          <>
+            <Stack.Screen
+              name="Home"
+              component={HomeScreen}
+              options={{ headerShown: false }}
+            />
 
-        {/* INTRO */}
-        <Stack.Screen
-          name="Intro"
-          component={IntroScreen}
-          options={{ headerShown: false }}
-        />
+            <Stack.Screen
+              name="Chat"
+              component={ChatScreen}
+              options={({ navigation }) => ({
+                title: 'Chat',
+                headerLeft: () => (
+                  <TouchableOpacity
+                    onPress={() => navigation.navigate('Chats')}
+                    style={{ marginLeft: spacing.md }}
+                  >
+                    <Text style={{ fontSize: 20, color: colors.text }}>
+                      ☰
+                    </Text>
+                  </TouchableOpacity>
+                ),
+                headerRight: () => <LegalControls />,
+              })}
+            />
 
-        {/* AUTH */}
-        <Stack.Screen
-          name="SignIn"
-          component={SignInScreen}
-          options={{ headerShown: false }}
-        />
+            <Stack.Screen
+              name="Chats"
+              component={ChatListScreen}
+              options={{
+                headerShown: false,
+                animation: 'slide_from_left',
+              }}
+            />
+          </>
+        ) : (
+          <>
+            <Stack.Screen
+              name="Intro"
+              component={IntroScreen}
+              options={{ headerShown: false }}
+            />
 
-        <Stack.Screen
-          name="SignUp"
-          component={SignUpScreen}
-          options={{ headerShown: false }}
-        />
+            <Stack.Screen
+              name="SignIn"
+              component={SignInScreen}
+              options={{ headerShown: false }}
+            />
 
-        {/* HOME */}
-        <Stack.Screen
-          name="Home"
-          component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-
-        {/* CHAT */}
-        <Stack.Screen
-          name="Chat"
-          component={ChatScreen}
-          options={({ navigation }) => ({
-            title: 'Chat',
-
-            headerLeft: () => (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('Chats')}
-                style={{ marginLeft: spacing.md }}
-              >
-                <Text style={{ fontSize: 20, color: colors.text }}>
-                  ☰
-                </Text>
-              </TouchableOpacity>
-            ),
-
-            headerRight: () => <LegalControls />,
-          })}
-        />
-
-        {/* CHAT LIST */}
-        <Stack.Screen
-          name="Chats"
-          component={ChatListScreen}
-          options={{
-            headerShown: false,
-            animation: 'slide_from_left',
-          }}
-        />
-
+            <Stack.Screen
+              name="SignUp"
+              component={SignUpScreen}
+              options={{ headerShown: false }}
+            />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -33,6 +33,8 @@ import { colors, spacing } from '../theme';
 
 import LinearGradient from 'react-native-linear-gradient';
 
+import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
+
 import { Keyboard } from 'react-native';
 
 export const ChatScreen = () => {
@@ -164,130 +166,122 @@ export const ChatScreen = () => {
   }, [initialMessage, hasSentInitial]);
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      {/* CHAT */}
-      <FlatList
-        ref={flatListRef}
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <MessageRenderer item={item} />}
-        contentContainerStyle={{
-          padding: spacing.md,
-          paddingBottom: 140, // 👈 prevent overlap
-          flexGrow: 1,
-        }}
-        keyboardShouldPersistTaps="handled"
+  <KeyboardAvoidingView
+    style={{ flex: 1, backgroundColor: colors.bg }}
+    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+  >
+    {/* CHAT */}
+    <FlatList
+      ref={flatListRef}
+      data={messages}
+      keyExtractor={(item) => item.id}
+      renderItem={({ item }) => <MessageRenderer item={item} />}
+      contentContainerStyle={{
+        padding: spacing.md,
+        paddingBottom: 140,
+        flexGrow: 1,
+      }}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+    />
+
+    {sending && (
+      <ActivityIndicator
+        style={{ marginBottom: spacing.sm }}
+        color={colors.primary}
       />
+    )}
 
-      {sending && (
-        <ActivityIndicator
-          style={{ marginBottom: spacing.sm }}
-          color={colors.primary}
-        />
-      )}
+    {/* FLOATING AREA */}
+    <View
+      style={{
+        position: 'absolute',
 
-      {/* FADE OVERLAY
-      <LinearGradient
-        colors={['transparent', colors.bg]}
-        style={{
-          position: 'absolute',
-          bottom: spacing.lg + 60, // 👈 KEY: just above floating area
-          left: 0,
-          right: 0,
-          height: 60,
-          zIndex: 5,
-        }}
-        pointerEvents="none"
-      /> */}
+        // ✅ FIXED (NO MAGIC NUMBERS)
+        bottom:
+          Platform.OS === 'ios'
+            ? keyboardHeight
+            : spacing.lg,
 
-      {/* FLOATING AREA */}
+        alignSelf: 'center',
+        width: '90%',
+      }}
+    >
+      {/* Dropdowns */}
       <View
         style={{
-          position: 'absolute',
-          bottom: keyboardHeight > 0 ? keyboardHeight -275  : spacing.lg,
-
-          alignSelf: 'center',
-          width: '90%',
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: spacing.sm,
+          marginBottom: spacing.xs,
         }}
       >
-        {/* Dropdowns */}
-        <View
-          style={{
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: spacing.sm,
-            marginBottom: spacing.xs,
-          }}
-        >
-          <ScopeDropdown />
-          <CountryDropdown />
-        </View>
-
-        {/* Input */}
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-
-            backgroundColor: colors.surface,
-            borderRadius: 999,
-            borderWidth: 1,
-            borderColor: colors.border,
-
-            paddingHorizontal: spacing.sm,
-            paddingVertical: 4,
-
-            shadowColor: '#000',
-            shadowOpacity: 0.1,
-            shadowRadius: 10,
-            elevation: 5,
-          }}
-        >
-          <TextInput
-            value={input}
-            onChangeText={setInput}
-            placeholder="Ask legal question..."
-            placeholderTextColor={colors.subtext}
-            style={{
-              flex: 1,
-              color: colors.text,
-              paddingHorizontal: spacing.sm,
-              paddingVertical: 6,
-              fontSize: 15,
-            }}
-            returnKeyType="send"
-            onSubmitEditing={() => {
-              if (!isDisabled) handleSend(input);
-            }}
-          />
-
-          <TouchableOpacity
-            onPress={() => handleSend(input)}
-            disabled={isDisabled}
-            style={{
-              marginLeft: spacing.xs,
-              paddingHorizontal: spacing.sm,
-              paddingVertical: 4,
-              opacity: isDisabled ? 0.4 : 1,
-            }}
-          >
-            <Text
-              style={{
-                color: isDisabled ? colors.subtext : colors.primary,
-                fontWeight: '600',
-                fontSize: 14,
-              }}
-            >
-              Send
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <ScopeDropdown />
+        <CountryDropdown />
       </View>
 
-    </KeyboardAvoidingView>
-  );
+      {/* Input */}
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+
+          backgroundColor: colors.surface,
+          borderRadius: 999,
+          borderWidth: 1,
+          borderColor: colors.border,
+
+          paddingHorizontal: spacing.sm,
+          paddingVertical: 4,
+
+          shadowColor: '#000',
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          elevation: 5,
+        }}
+      >
+        <TextInput
+          value={input}
+          onChangeText={setInput}
+          placeholder="Ask legal question..."
+          placeholderTextColor={colors.subtext}
+          style={{
+            flex: 1,
+            color: colors.text,
+            paddingHorizontal: spacing.sm,
+            paddingVertical: 6,
+            fontSize: 15,
+          }}
+          returnKeyType="send"
+          onSubmitEditing={() => {
+            if (!isDisabled) handleSend(input);
+          }}
+        />
+
+        <TouchableOpacity
+          onPress={() => handleSend(input)}
+          disabled={isDisabled}
+          style={{
+            marginLeft: spacing.xs,
+            paddingHorizontal: spacing.sm,
+            paddingVertical: 4,
+            opacity: isDisabled ? 0.4 : 1,
+          }}
+        >
+          <Text
+            style={{
+              color: isDisabled ? colors.subtext : colors.primary,
+              fontWeight: '600',
+              fontSize: 14,
+            }}
+          >
+            Send
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </KeyboardAvoidingView>
+);
 };

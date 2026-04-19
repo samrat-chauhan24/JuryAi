@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 
+import auth from '@react-native-firebase/auth';
+
 import {
   getChats,
   deleteChat,
@@ -186,7 +188,52 @@ export const ChatListScreen = ({ navigation }: any) => {
             fontWeight: '600',
           }}
         >
-          + Chat
+          + New Chat
+        </Text>
+      </TouchableOpacity>
+
+      {/* Logout */}
+      <TouchableOpacity
+        onPress={() => {
+        Alert.alert(
+          'Sign Out',
+          'Are you sure you want to sign out?',
+          [
+            {
+              text: 'No',
+              style: 'cancel',
+            },
+            {
+              text: 'Yes',
+              style: 'destructive',
+              onPress: async () => {
+                try {
+                  await auth().signOut();
+                } catch (e) {
+                  console.log('Logout error', e);
+                }
+              },
+            },
+          ]
+        );
+      }}
+        style={{
+          position: 'absolute',
+          bottom: spacing.xl,
+          left: spacing.xl,
+          backgroundColor: colors.primary,
+          paddingVertical: spacing.sm,
+          paddingHorizontal: spacing.lg,
+          borderRadius: radius.pill,
+        }}
+      >
+        <Text
+          style={{
+            color: '#fff',
+            fontWeight: '600',
+          }}
+        >
+          Sign Out
         </Text>
       </TouchableOpacity>
 
