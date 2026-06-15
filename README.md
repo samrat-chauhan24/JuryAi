@@ -82,7 +82,7 @@ When multiple countries are selected:
 
 --- 
 
-### 👨‍💻 Authors
+### 👨‍💻 Author
 
 - Samrat Chauhan
-- Ronak Malik
+
