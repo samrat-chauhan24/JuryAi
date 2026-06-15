@@ -150,7 +150,7 @@ export const HomeScreen = ({ navigation }: any) => {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Ask LawGPT..."
+                placeholder="Ask JuryAi..."
                 placeholderTextColor={colors.subtext}
                 style={{
                   flex: 1,

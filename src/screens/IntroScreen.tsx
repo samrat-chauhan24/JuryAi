@@ -33,11 +33,11 @@ export const IntroScreen = ({ navigation }: any) => {
         {/* CENTER */}
         <View style={styles.center}>
           <Image
-            source={require('../assets/logo3.png')}
+            source={require('../assets/logo2.png')}
             style={styles.logo}
           />
 
-          <Text style={styles.title}>LawGPT</Text>
+          <Text style={styles.title}>JuryAi</Text>
 
           <Text style={styles.subtitle}>
             Ask about laws, rights, or regulations
