@@ -3,69 +3,93 @@ import React, {
   useRef,
   useEffect,
   useCallback,
-} from 'react';
+} from "react";
+
 import {
   View,
   FlatList,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   TextInput,
   TouchableOpacity,
   Text,
-} from 'react-native';
+  Keyboard,
+  StyleSheet,
+} from "react-native";
 
-import { Message } from '../types/message';
+import {
+  useRoute,
+  useFocusEffect,
+} from "@react-navigation/native";
 
-import { sendMessageToAI } from '../services/chatService';
-import { saveMessage, getMessages } from '../database/chatQueries';
+import type { Message } from "../types/message";
 
-import { useRoute, useFocusEffect } from '@react-navigation/native';
+import { sendMessageToAI } from "../services/chatService";
 
-import { useLegalStore } from '../store/useLegalStore';
+import {
+  saveMessage,
+  getMessages,
+} from "../database/chatQueries";
 
-import { MessageRenderer } from '../components/MessageRender';
-import { CountryDropdown } from '../components/CountryDropdown';
-import { ScopeDropdown } from '../components/ScopeDropdown';
+import { useLegalStore } from "../store/useLegalStore";
 
-// ✅ THEME
-import { colors, spacing } from '../theme';
+import { MessageRenderer } from "../components/MessageRender";
+import { CountryDropdown } from "../components/CountryDropdown";
+import { ScopeDropdown } from "../components/ScopeDropdown";
 
-import LinearGradient from 'react-native-linear-gradient';
-
-import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
-
-import { Keyboard } from 'react-native';
+import {
+  colors,
+  spacing,
+} from "../theme";
 
 export const ChatScreen = () => {
+  // All hooks must stay at the top and always run in this exact order.
   const route = useRoute<any>();
 
   const chatId = route.params?.chatId;
   const initialMessage = route.params?.initialMessage;
 
   const [messages, setMessages] = useState<any[]>([]);
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
-  const [hasSentInitial, setHasSentInitial] = useState(false);
+  const [hasSentInitial, setHasSentInitial] =
+    useState(false);
 
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [keyboardHeight, setKeyboardHeight] =
+    useState(0);
 
-  const flatListRef = useRef<FlatList>(null);
+  const flatListRef = useRef<FlatList<any>>(null);
 
-  const jurisdiction = useLegalStore((s) => s.jurisdiction);
-  const countries = useLegalStore((s) => s.countries);
-  const mode = useLegalStore((s) => s.mode);
-  const isValid = useLegalStore((s) => s.isValid);
+  const jurisdiction = useLegalStore(
+    (state) => state.jurisdiction
+  );
+
+  const countries = useLegalStore(
+    (state) => state.countries
+  );
+
+  const mode = useLegalStore(
+    (state) => state.mode
+  );
+
+  const isValid = useLegalStore(
+    (state) => state.isValid
+  );
 
   const isDisabled =
-  !input.trim() ||
-  !isValid() ||
-  sending;
+    !input.trim() ||
+    !isValid() ||
+    sending;
 
   const loadMessages = useCallback(() => {
-    if (!chatId) return;
-    const data = getMessages(chatId) || [];
-    setMessages([...data]);
+    if (!chatId) {
+      return;
+    }
+
+    const storedMessages =
+      getMessages(chatId) || [];
+
+    setMessages([...storedMessages]);
   }, [chatId]);
 
   useFocusEffect(
@@ -75,213 +99,342 @@ export const ChatScreen = () => {
   );
 
   useEffect(() => {
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
+    const timeout = setTimeout(() => {
+      flatListRef.current?.scrollToEnd({
+        animated: true,
+      });
     }, 100);
-  }, [messages]);
+
+    return () => clearTimeout(timeout);
+  }, [messages, sending]);
 
   useEffect(() => {
-  const showSub = Keyboard.addListener('keyboardDidShow', (e) => {
-    setKeyboardHeight(e.endCoordinates.height);
-  });
+    const showSubscription = Keyboard.addListener(
+      "keyboardDidShow",
+      (event) => {
+        setKeyboardHeight(
+          event.endCoordinates.height
+        );
+      }
+    );
 
-  const hideSub = Keyboard.addListener('keyboardDidHide', () => {
-    setKeyboardHeight(0);
-  });
+    const hideSubscription = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
 
-  return () => {
-    showSub.remove();
-    hideSub.remove();
-  };
-}, []);
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
-  const handleSend = async (textOverride?: string) => {
+  const handleSend = async (
+    textOverride?: string
+  ) => {
     const text = textOverride ?? input;
 
-    if (!text?.trim() || sending || !chatId || !isValid()) return;
+    if (
+      !text?.trim() ||
+      sending ||
+      !chatId ||
+      !isValid()
+    ) {
+      return;
+    }
+
+    const cleanText = text.trim();
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text,
-      sender: 'user',
+      text: cleanText,
+      sender: "user",
       chatId,
     };
 
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+    setMessages((previousMessages) => [
+      ...previousMessages,
+      userMessage,
+    ]);
+
+    setInput("");
     setSending(true);
 
     try {
-      saveMessage?.(userMessage);
+      saveMessage(userMessage);
     } catch {}
 
     try {
       const data = await sendMessageToAI({
-        query: text,
+        query: cleanText,
         jurisdiction,
         countries,
         mode,
       });
 
       const botMessage = {
-        id: Date.now().toString() + '_bot',
-        sender: 'bot',
+        id: `${Date.now()}_bot`,
+        sender: "bot",
         chatId,
         data,
-        mode
+        mode,
       };
 
-      setMessages(prev => [...prev, botMessage]);
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        botMessage,
+      ]);
 
       try {
-        saveMessage?.({
+        saveMessage({
           id: botMessage.id,
           text: JSON.stringify({
             data,
-            mode, // 👈 THIS is the fix
+            mode,
           }),
-          sender: 'bot',
+          sender: "bot",
           chatId,
         });
       } catch {}
     } catch {
       const errorMessage: Message = {
-        id: Date.now().toString() + '_error',
-        text: '⚠️ Failed to connect. Try again.',
-        sender: 'bot',
+        id: `${Date.now()}_error`,
+        text: "⚠️ Failed to connect. Try again.",
+        sender: "bot",
         chatId,
       };
 
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        errorMessage,
+      ]);
     } finally {
       setSending(false);
     }
   };
 
   useEffect(() => {
-    if (!initialMessage || hasSentInitial) return;
+    if (
+      !initialMessage ||
+      hasSentInitial
+    ) {
+      return;
+    }
 
     handleSend(initialMessage);
     setHasSentInitial(true);
-  }, [initialMessage, hasSentInitial]);
+  }, [
+    initialMessage,
+    hasSentInitial,
+  ]);
 
   return (
-  <KeyboardAvoidingView
-    style={{ flex: 1, backgroundColor: colors.bg }}
-    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
-  >
-    {/* CHAT */}
-    <FlatList
-      ref={flatListRef}
-      data={messages}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <MessageRenderer item={item} />}
-      contentContainerStyle={{
-        padding: spacing.md,
-        paddingBottom: 140,
-        flexGrow: 1,
-      }}
-      keyboardShouldPersistTaps="handled"
-      keyboardDismissMode="on-drag"
-    />
-
-    {sending && (
-      <ActivityIndicator
-        style={{ marginBottom: spacing.sm }}
-        color={colors.primary}
-      />
-    )}
-
-    {/* FLOATING AREA */}
-    <View
-      style={{
-        position: 'absolute',
-
-        // ✅ FIXED (NO MAGIC NUMBERS)
-        bottom:
-          Platform.OS === 'ios'
-            ? keyboardHeight
-            : spacing.lg,
-
-        alignSelf: 'center',
-        width: '90%',
-      }}
+    <KeyboardAvoidingView
+      style={styles.screen}
+      behavior={
+        Platform.OS === "ios"
+          ? "padding"
+          : undefined
+      }
     >
-      {/* Dropdowns */}
-      <View
-        style={{
-          flexDirection: 'row',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: spacing.sm,
-          marginBottom: spacing.xs,
+      <FlatList
+        ref={flatListRef}
+        data={messages}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item, index }) => {
+          const isLastMessage =
+            index === messages.length - 1;
+
+          const showLoader =
+            sending &&
+            isLastMessage &&
+            item.sender === "user";
+
+          return (
+            <View
+              style={
+                index === 0
+                  ? styles.firstMessage
+                  : undefined
+              }
+            >
+              <MessageRenderer item={item} />
+
+              {showLoader && (
+                <View style={styles.loaderRow}>
+                  <View style={styles.loaderBubble}>
+                    <Text style={styles.loaderDots}>
+                      •••
+                    </Text>
+
+                    <Text style={styles.loaderText}>
+                      JuryAI is analyzing...
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
+          );
         }}
-      >
-        <ScopeDropdown />
-        <CountryDropdown />
-      </View>
+        contentContainerStyle={styles.messageList}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
+        showsVerticalScrollIndicator={false}
+      />
 
-      {/* Input */}
       <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-
-          backgroundColor: colors.surface,
-          borderRadius: 999,
-          borderWidth: 1,
-          borderColor: colors.border,
-
-          paddingHorizontal: spacing.sm,
-          paddingVertical: 4,
-
-          shadowColor: '#000',
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
-          elevation: 5,
-        }}
+        style={[
+          styles.composerWrapper,
+          {
+            bottom:
+              Platform.OS === "ios"
+                ? keyboardHeight + spacing.lg
+                : spacing.lg,
+          },
+        ]}
       >
-        <TextInput
-          value={input}
-          onChangeText={setInput}
-          placeholder="Ask legal question..."
-          placeholderTextColor={colors.subtext}
-          style={{
-            flex: 1,
-            color: colors.text,
-            paddingHorizontal: spacing.sm,
-            paddingVertical: 6,
-            fontSize: 15,
-          }}
-          returnKeyType="send"
-          onSubmitEditing={() => {
-            if (!isDisabled) handleSend(input);
-          }}
-        />
+        <View style={styles.dropdownRow}>
+          <ScopeDropdown />
+          <CountryDropdown />
+        </View>
 
-        <TouchableOpacity
-          onPress={() => handleSend(input)}
-          disabled={isDisabled}
-          style={{
-            marginLeft: spacing.xs,
-            paddingHorizontal: spacing.sm,
-            paddingVertical: 4,
-            opacity: isDisabled ? 0.4 : 1,
-          }}
-        >
-          <Text
-            style={{
-              color: isDisabled ? colors.subtext : colors.primary,
-              fontWeight: '600',
-              fontSize: 14,
+        <View style={styles.inputBar}>
+          <TextInput
+            value={input}
+            onChangeText={setInput}
+            placeholder="Ask legal question..."
+            placeholderTextColor={colors.subtext}
+            style={styles.input}
+            returnKeyType="send"
+            onSubmitEditing={() => {
+              if (!isDisabled) {
+                handleSend(input);
+              }
             }}
+          />
+
+          <TouchableOpacity
+            onPress={() => handleSend(input)}
+            disabled={isDisabled}
+            activeOpacity={0.75}
+            style={[
+              styles.sendButton,
+              isDisabled &&
+                styles.sendButtonDisabled,
+            ]}
           >
-            Send
-          </Text>
-        </TouchableOpacity>
+            <Text style={styles.sendIcon}>
+              ➜
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
-  </KeyboardAvoidingView>
-);
+    </KeyboardAvoidingView>
+  );
 };
+
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+
+  messageList: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: 220,
+    flexGrow: 1,
+  },
+
+  firstMessage: {
+    marginTop: spacing.md,
+  },
+
+  loaderRow: {
+    alignItems: "flex-start",
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
+
+  loaderBubble: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    paddingHorizontal: spacing.md,
+    paddingVertical: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+  },
+
+  loaderDots: {
+    color: colors.primary,
+    fontWeight: "700",
+    letterSpacing: 2,
+    marginRight: 7,
+  },
+
+  loaderText: {
+    color: colors.text,
+    fontSize: 14,
+  },
+
+  composerWrapper: {
+    position: "absolute",
+    alignSelf: "center",
+    width: "90%",
+  },
+
+  dropdownRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+
+  inputBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.sm,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+
+  input: {
+    flex: 1,
+    color: colors.text,
+    fontSize: 15,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 6,
+  },
+
+  sendButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    marginLeft: spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primary,
+  },
+
+  sendButtonDisabled: {
+    backgroundColor: colors.surfaceLight,
+  },
+
+  sendIcon: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+  },
+});

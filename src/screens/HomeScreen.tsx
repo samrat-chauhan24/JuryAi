@@ -1,41 +1,47 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
-} from 'react-native';
+  Platform,
+  KeyboardAvoidingView,
+} from "react-native";
 
-import { createChat } from '../database/chatQueries';
-import { LegalControls } from '../components/LegalControls';
-import { CountryDropdown } from '../components/CountryDropdown';
-import { ScopeDropdown } from '../components/ScopeDropdown';
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Platform } from 'react-native';
-import { KeyboardAvoidingView } from 'react-native';
+import { createChat } from "../database/chatQueries";
+import { LegalControls } from "../components/LegalControls";
+import { CountryDropdown } from "../components/CountryDropdown";
+import { ScopeDropdown } from "../components/ScopeDropdown";
 
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  colors,
+  spacing,
+  typography,
+} from "../theme";
 
-// ✅ THEME
-import { colors, spacing, typography } from '../theme';
-
-// ✅ FIX: selector-based Zustand usage
-import { useLegalStore } from '../store/useLegalStore';
+import { useLegalStore } from "../store/useLegalStore";
 
 export const HomeScreen = ({ navigation }: any) => {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
 
-  // ✅ SAFE STORE ACCESS (same pattern as ChatScreen)
-  const jurisdiction = useLegalStore((s) => s.jurisdiction);
-  const countries = useLegalStore((s) => s.countries);
+  const jurisdiction = useLegalStore(
+    (s) => s.jurisdiction
+  );
 
-  // ✅ SAME VALIDATION LOGIC AS CHATSCREEN
+  const countries = useLegalStore(
+    (s) => s.countries
+  );
+
   const isDisabled =
     sending ||
     !input.trim() ||
-    (jurisdiction === 'specific country' && countries.length !== 1) ||
-    (jurisdiction === 'comparison' && countries.length !== 2);
+    (jurisdiction === "specific country" &&
+      countries.length !== 1) ||
+    (jurisdiction === "comparison" &&
+      countries.length !== 2);
 
   const handleSend = useCallback(() => {
     if (isDisabled) return;
@@ -46,37 +52,60 @@ export const HomeScreen = ({ navigation }: any) => {
 
     createChat(chatId);
 
-    navigation.replace('Chat', {
+    navigation.replace("Chat", {
       chatId,
-      initialMessage: input,
+      initialMessage: input.trim(),
     });
 
-    setInput('');
+    setInput("");
     setSending(false);
-  }, [isDisabled, input, navigation]);
+  }, [input, isDisabled, navigation]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.bg }}>
+    <SafeAreaView
+      style={{
+        flex: 1,
+        backgroundColor: colors.bg,
+      }}
+    >
       <KeyboardAvoidingView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
       >
-        <View style={{ flex: 1, backgroundColor: colors.bg }}>
-          
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: colors.bg,
+          }}
+        >
           {/* HEADER */}
           <View
             style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
               paddingHorizontal: spacing.lg,
               paddingTop: spacing.sm,
               paddingBottom: spacing.sm,
               paddingRight: 0,
             }}
           >
-            <TouchableOpacity onPress={() => navigation.navigate('Chats')}>
-              <Text style={{ fontSize: 22, color: colors.text }}>☰</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Chats")}
+              activeOpacity={0.75}
+            >
+              <Text
+                style={{
+                  fontSize: 22,
+                  color: colors.text,
+                }}
+              >
+                ☰
+              </Text>
             </TouchableOpacity>
 
             <LegalControls />
@@ -86,8 +115,8 @@ export const HomeScreen = ({ navigation }: any) => {
           <View
             style={{
               flex: 1,
-              justifyContent: 'center',
-              alignItems: 'center',
+              justifyContent: "center",
+              alignItems: "center",
               paddingHorizontal: spacing.xl,
             }}
           >
@@ -95,7 +124,7 @@ export const HomeScreen = ({ navigation }: any) => {
               style={[
                 typography.title,
                 {
-                  textAlign: 'center',
+                  textAlign: "center",
                   lineHeight: 30,
                 },
               ]}
@@ -104,24 +133,24 @@ export const HomeScreen = ({ navigation }: any) => {
             </Text>
           </View>
 
-          {/* FLOATING AREA */}
+          {/* FLOATING INPUT AREA */}
           <View
             style={{
-              position: 'absolute',
+              position: "absolute",
               bottom:
-                Platform.OS === 'ios'
+                Platform.OS === "ios"
                   ? 0
                   : spacing.lg,
-              alignSelf: 'center',
-              width: '90%',
+              alignSelf: "center",
+              width: "90%",
             }}
           >
-            {/* Dropdowns */}
+            {/* DROPDOWNS */}
             <View
               style={{
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
                 gap: spacing.sm,
                 marginBottom: spacing.xs,
               }}
@@ -130,18 +159,17 @@ export const HomeScreen = ({ navigation }: any) => {
               <CountryDropdown />
             </View>
 
-            {/* INPUT */}
+            {/* INPUT BAR */}
             <View
               style={{
-                flexDirection: 'row',
-                alignItems: 'center',
+                flexDirection: "row",
+                alignItems: "center",
                 backgroundColor: colors.surface,
                 borderRadius: 999,
                 borderWidth: 1,
                 borderColor: colors.border,
-                paddingHorizontal: spacing.sm,
-                paddingVertical: 4,
-                shadowColor: '#000',
+                padding: spacing.sm,
+                shadowColor: "#000",
                 shadowOpacity: 0.1,
                 shadowRadius: 10,
                 elevation: 5,
@@ -150,7 +178,7 @@ export const HomeScreen = ({ navigation }: any) => {
               <TextInput
                 value={input}
                 onChangeText={setInput}
-                placeholder="Ask JuryAi..."
+                placeholder="Ask JuryAI..."
                 placeholderTextColor={colors.subtext}
                 style={{
                   flex: 1,
@@ -161,33 +189,40 @@ export const HomeScreen = ({ navigation }: any) => {
                 }}
                 returnKeyType="send"
                 onSubmitEditing={() => {
-                  if (!isDisabled) handleSend();
+                  if (!isDisabled) {
+                    handleSend();
+                  }
                 }}
               />
 
               <TouchableOpacity
                 onPress={handleSend}
                 disabled={isDisabled}
+                activeOpacity={0.75}
                 style={{
-                  marginLeft: spacing.xs,
-                  paddingHorizontal: spacing.sm,
-                  paddingVertical: 4,
-                  opacity: isDisabled ? 0.4 : 1,
+                  width: 42,
+                  height: 42,
+                  borderRadius: 21,
+                  marginLeft: spacing.sm,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: isDisabled
+                    ? colors.surfaceLight
+                    : colors.primary,
                 }}
               >
                 <Text
                   style={{
-                    color: isDisabled ? colors.subtext : colors.primary,
-                    fontWeight: '600',
-                    fontSize: 14,
+                    color: "#fff",
+                    fontSize: 18,
+                    fontWeight: "700",
                   }}
                 >
-                  Send
+                  ➜
                 </Text>
               </TouchableOpacity>
             </View>
           </View>
-
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
