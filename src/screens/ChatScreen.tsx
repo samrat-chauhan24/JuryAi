@@ -25,6 +25,7 @@ import {
 import type { Message } from "../types/message";
 
 import { sendMessageToAI } from "../services/chatService";
+import ChatSyncService from "../services/chatSyncService";
 
 import {
   saveMessage,
@@ -81,10 +82,12 @@ export const ChatScreen = () => {
     !isValid() ||
     sending;
 
-  const loadMessages = useCallback(() => {
+  const loadMessages = useCallback(async () => {
     if (!chatId) {
       return;
     }
+
+    await ChatSyncService.syncMessages(chatId);
 
     const storedMessages =
       getMessages(chatId) || [];
@@ -163,7 +166,7 @@ export const ChatScreen = () => {
     setSending(true);
 
     try {
-      saveMessage(userMessage);
+      await saveMessage(userMessage);
     } catch {}
 
     try {
@@ -188,7 +191,7 @@ export const ChatScreen = () => {
       ]);
 
       try {
-        saveMessage({
+        await saveMessage({
           id: botMessage.id,
           text: JSON.stringify({
             data,
@@ -278,7 +281,12 @@ export const ChatScreen = () => {
             </View>
           );
         }}
-        contentContainerStyle={styles.messageList}
+        contentContainerStyle={{
+          paddingHorizontal: spacing.md,
+          paddingTop: spacing.lg,
+          paddingBottom: keyboardHeight + 180,
+          flexGrow: 1,
+        }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
@@ -289,9 +297,9 @@ export const ChatScreen = () => {
           styles.composerWrapper,
           {
             bottom:
-              Platform.OS === "ios"
-                ? keyboardHeight + spacing.lg
-                : spacing.lg,
+              Platform.OS === "android"
+                ? keyboardHeight + 12
+                : keyboardHeight + spacing.lg,
           },
         ]}
       >

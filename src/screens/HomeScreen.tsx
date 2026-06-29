@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,7 +6,9 @@ import {
   TouchableOpacity,
   Platform,
   KeyboardAvoidingView,
+  Keyboard
 } from "react-native";
+
 
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -26,6 +28,9 @@ import { useLegalStore } from "../store/useLegalStore";
 export const HomeScreen = ({ navigation }: any) => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+const mode = useLegalStore(state => state.mode);
 
   const jurisdiction = useLegalStore(
     (s) => s.jurisdiction
@@ -34,7 +39,7 @@ export const HomeScreen = ({ navigation }: any) => {
   const countries = useLegalStore(
     (s) => s.countries
   );
-
+  
   const isDisabled =
     sending ||
     !input.trim() ||
@@ -43,14 +48,19 @@ export const HomeScreen = ({ navigation }: any) => {
     (jurisdiction === "comparison" &&
       countries.length !== 2);
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (isDisabled) return;
 
     setSending(true);
 
     const chatId = Date.now().toString();
 
-    createChat(chatId);
+    await createChat(
+      chatId,
+      mode,
+      jurisdiction,
+      countries
+    );
 
     navigation.replace("Chat", {
       chatId,
@@ -60,6 +70,29 @@ export const HomeScreen = ({ navigation }: any) => {
     setInput("");
     setSending(false);
   }, [input, isDisabled, navigation]);
+
+  useEffect(() => {
+    const showSubscription = Keyboard.addListener(
+      "keyboardDidShow",
+      event => {
+        setKeyboardHeight(
+          event.endCoordinates.height
+        );
+      }
+    );
+
+    const hideSubscription = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setKeyboardHeight(0);
+      }
+    );
+
+    return () => {
+      showSubscription.remove();
+      hideSubscription.remove();
+    };
+  }, []);
 
   return (
     <SafeAreaView
@@ -118,6 +151,7 @@ export const HomeScreen = ({ navigation }: any) => {
               justifyContent: "center",
               alignItems: "center",
               paddingHorizontal: spacing.xl,
+              paddingBottom: keyboardHeight,
             }}
           >
             <Text
@@ -137,12 +171,12 @@ export const HomeScreen = ({ navigation }: any) => {
           <View
             style={{
               position: "absolute",
-              bottom:
-                Platform.OS === "ios"
-                  ? 0
-                  : spacing.lg,
               alignSelf: "center",
               width: "90%",
+              bottom:
+                Platform.OS === "android"
+                  ? keyboardHeight + 12
+                  : keyboardHeight + spacing.lg,
             }}
           >
             {/* DROPDOWNS */}

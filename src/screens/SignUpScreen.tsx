@@ -5,15 +5,18 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// ✅ THEME
-import { colors, spacing, typography } from '../theme';
+import FirestoreService from '../services/firestoreService';
 import { signUp } from '../services/authService';
 
-import { Alert } from 'react-native';
+import { colors, spacing, typography } from '../theme';
 
 export const SignUpScreen = ({ navigation }: any) => {
   const [email, setEmail] = useState('');
@@ -28,107 +31,157 @@ export const SignUpScreen = ({ navigation }: any) => {
     !confirmPassword ||
     password !== confirmPassword;
 
+  const handleSignUp = async () => {
+    if (isDisabled) return;
+
+    try {
+      setLoading(true);
+
+      await signUp(email, password);
+
+      await FirestoreService.createUser('', email);
+
+      navigation.replace('Home');
+    } catch (e: any) {
+      console.log('SIGN UP ERROR:', e);
+      console.log('CODE:', e?.code);
+      console.log('MESSAGE:', e?.message);
+
+      if (e.code === 'auth/email-already-in-use') {
+        Alert.alert('Error', 'Email already registered');
+      } else if (e.code === 'auth/invalid-email') {
+        Alert.alert('Error', 'Invalid email');
+      } else if (e.code === 'auth/weak-password') {
+        Alert.alert(
+          'Error',
+          'Password must be at least 6 characters'
+        );
+      } else {
+        Alert.alert('Error', 'Something went wrong');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.inner}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.inner}>
+            <Text style={styles.title}>Sign Up</Text>
 
-        <Text style={styles.title}>Sign Up</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              placeholderTextColor={colors.subtext}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="emailAddress"
+              returnKeyType="next"
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor={colors.subtext}
-          value={email}
-          onChangeText={setEmail}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={colors.subtext}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="newPassword"
+              returnKeyType="next"
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor={colors.subtext}
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              placeholderTextColor={colors.subtext}
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="newPassword"
+              returnKeyType="done"
+              onSubmitEditing={handleSignUp}
+            />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm Password"
-          placeholderTextColor={colors.subtext}
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
+            <View style={styles.buttonWrapper}>
+              <TouchableOpacity
+                disabled={isDisabled}
+                onPress={handleSignUp}
+                style={[
+                  styles.button,
+                  {
+                    opacity: isDisabled ? 0.4 : 1,
+                  },
+                ]}
+              >
+                <Text style={styles.placeholder}>
+                  {loading
+                    ? 'Creating...'
+                    : 'Create Account'}
+                </Text>
 
-        {/* BUTTON */}
-        <View style={styles.buttonWrapper}>
-          <TouchableOpacity
-            disabled={isDisabled}
-            onPress={async () => {
-              if (isDisabled) return;
+                <Text style={styles.arrow}>→</Text>
+              </TouchableOpacity>
+            </View>
 
-              try {
-                setLoading(true);
-                await signUp(email, password);
-                navigation.replace('Home');
-              } catch (e: any) {
-                  if (e.code === 'auth/email-already-in-use') {
-                    Alert.alert('Error', 'Email already registered');
-                  } else if (e.code === 'auth/invalid-email') {
-                    Alert.alert('Error', 'Invalid email');
-                  } else if (e.code === 'auth/weak-password') {
-                    Alert.alert('Error', 'Password must be at least 6 characters');
-                  } else {
-                    Alert.alert('Error', 'Something went wrong');
-                  }
-                } 
-              finally {
-                setLoading(false);
-              }
-            }}
-            style={[
-              styles.button,
-              { opacity: isDisabled ? 0.4 : 1 },
-            ]}
-          >
-            <Text style={styles.placeholder}>
-              {loading ? 'Creating...' : 'Create Account'}
-            </Text>
-            <Text style={styles.arrow}>→</Text>
-          </TouchableOpacity>
-        </View>
+            <View style={styles.linkRow}>
+              <Text style={styles.linkText}>
+                Already have an account?{' '}
+              </Text>
 
-        {/* LINK */}
-        <View style={styles.linkRow}>
-          <Text style={styles.linkText}>
-            Already have an account?{' '}
-          </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
-            <Text style={styles.linkHighlight}>Sign in</Text>
-          </TouchableOpacity>
-        </View>
-
-      </View>
+              <TouchableOpacity
+                onPress={() =>
+                  navigation.navigate('SignIn')
+                }
+              >
+                <Text style={styles.linkHighlight}>
+                  Sign in
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
-// STYLES (unchanged)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.bg,
   },
-  inner: {
-    flex: 1,
+
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
+  },
+
+  inner: {
     padding: spacing.lg,
   },
+
   title: {
     ...typography.title,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
+
   input: {
     backgroundColor: colors.surface,
     borderRadius: 999,
@@ -139,10 +192,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
     color: colors.text,
   },
+
   buttonWrapper: {
     alignItems: 'center',
     marginTop: spacing.lg,
   },
+
   button: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -155,22 +210,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 12,
   },
+
   placeholder: {
     color: colors.subtext,
   },
+
   arrow: {
     color: colors.primary,
     fontSize: 18,
     fontWeight: '600',
   },
+
   linkRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: spacing.md,
   },
+
   linkText: {
     color: colors.subtext,
   },
+
   linkHighlight: {
     color: colors.primary,
     fontWeight: '600',

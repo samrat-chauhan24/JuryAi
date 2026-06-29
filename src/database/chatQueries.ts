@@ -1,12 +1,35 @@
 import { db } from './db';
+import FirestoreService from "../services/firestoreService";
 
 // ✅ Create new chat
-export const createChat = (chatId: string) => {
+export const createChat = async (
+  chatId: string,
+  mode: string,
+  jurisdiction: string,
+  countries: string[],
+  title: string = "New Chat",
+  syncToFirestore: boolean = true
+) => {
   db.execute(
-    `INSERT INTO chats (id, title, lastMessage, updatedAt, createdAt)
+    `INSERT OR IGNORE INTO chats
+     (id, title, lastMessage, updatedAt, createdAt)
      VALUES (?, ?, ?, ?, ?)`,
-    [chatId, 'New Chat', '', Date.now(), Date.now()]
+    [chatId, title, "", Date.now(), Date.now()]
   );
+
+  if (!syncToFirestore) return;
+
+  try {
+    await FirestoreService.createChat({
+      id: chatId,
+      title,
+      mode,
+      jurisdiction,
+      countries,
+    });
+  } catch (e) {
+    console.log("Firestore createChat failed:", e);
+  }
 };
 
 // ✅ Get all chats
@@ -19,20 +42,35 @@ export const getChats = () => {
 };
 
 // ✅ Save message
-export const saveMessage = (msg: any) => {
+export const saveMessage = async (
+  msg: any,
+  syncToFirestore: boolean = true
+) => {
   db.execute(
-    `INSERT OR IGNORE INTO messages 
+    `INSERT OR IGNORE INTO messages
      (id, chatId, text, sender, createdAt, status)
      VALUES (?, ?, ?, ?, ?, ?)`,
-    [msg.id, msg.chatId, msg.text, msg.sender, Date.now(), 'sent']
+    [msg.id, msg.chatId, msg.text, msg.sender, Date.now(), "sent"]
   );
 
-  // 🔥 update last message
+    if (syncToFirestore) {
+      try {
+        await FirestoreService.saveMessage(
+          msg.chatId,
+          msg
+        );
+      } catch (e) {
+        console.log(e);
+      }
+    }
+
   updateChatAfterMessage(msg.chatId, msg.text);
 
-  // 🔥 update title ONLY for first user message
-  if (msg.sender === 'user') {
-    updateChatTitleIfFirstMessage(msg.chatId, msg.text);
+  if (msg.sender === "user") {
+    await updateChatTitleIfFirstMessage(
+      msg.chatId,
+      msg.text
+    );
   }
 };
 
@@ -75,20 +113,31 @@ export const getMessages = (chatId: string) => {
 };
 
 // change the name to users first message
-export const updateChatTitleIfFirstMessage = (
+export const updateChatTitleIfFirstMessage = async (
   chatId: string,
   text: string
 ) => {
+  const title = text.slice(0, 30);
+
   db.execute(
-    `UPDATE chats 
-     SET title=? 
+    `UPDATE chats
+     SET title=?
      WHERE id=? AND title='New Chat'`,
-    [text.slice(0, 30), chatId]
+    [title, chatId]
   );
+
+  try {
+    await FirestoreService.renameChat(
+      chatId,
+      title
+    );
+  } catch (e) {
+    console.log(e);
+  }
 };
 
 // delete chats
-export const deleteChat = (chatId: string) => {
+export const deleteChat = async (chatId: string) => {
   db.execute(
     `DELETE FROM messages WHERE chatId=?`,
     [chatId]
@@ -98,12 +147,49 @@ export const deleteChat = (chatId: string) => {
     `DELETE FROM chats WHERE id=?`,
     [chatId]
   );
+
+  try {
+    await FirestoreService.deleteChat(chatId);
+  } catch (e) {
+    console.log("Firestore deleteChat failed:", e);
+  }
 };
 
 // rename query
-export const renameChat = (chatId: string, newTitle: string) => {
+export const renameChat = async (
+  chatId: string,
+  newTitle: string
+) => {
   db.execute(
     `UPDATE chats SET title=? WHERE id=?`,
     [newTitle, chatId]
   );
+
+  try {
+    await FirestoreService.renameChat(
+      chatId,
+      newTitle
+    );
+  } catch (e) {
+    console.log("Firestore renameChat failed:", e);
+  }
+};
+
+// helper functions
+export const chatExists = (chatId: string) => {
+  const result = db.execute(
+    `SELECT id FROM chats WHERE id=?`,
+    [chatId]
+  );
+
+  return (result.rows?._array.length ?? 0) > 0;
+};
+
+export const messageExists = (messageId: string) => {
+  const result = db.execute(
+    `SELECT id FROM messages WHERE id=?`,
+    [messageId]
+  );
+
+  return (result.rows?._array.length ?? 0) > 0;
 };

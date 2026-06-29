@@ -1,6 +1,6 @@
 import { Platform } from "react-native";
 
-const MAC_IP = "10.223.202.30";
+const MAC_IP = "10.23.184.30";
 
 const API_BASE_URL =
   Platform.OS === "android"
